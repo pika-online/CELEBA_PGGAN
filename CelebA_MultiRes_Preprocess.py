@@ -70,10 +70,8 @@ if __name__ == '__main__':
         print('当前分辨率：%dx%d..'%(res,res))
         # 显示
         vs.CV2_BATCH_RANDOM_SHOW(low,1,25,5,5)
-        # [-1,1]
-        low = (low/2-1).astype(np.float32)
         # 设置标签
         label = np.zeros(low.shape[0], dtype=np.int8)
         # 保存
         savename = './TFR/celeba_glass_%dx%d' % (res, res)
-        tfr.Saving_All_TFR(savename,low,label,5)
+        tfr.Saving_All_TFR(savename,(low/2-1).astype(np.float32),label,5)

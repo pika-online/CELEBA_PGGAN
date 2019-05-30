@@ -1,7 +1,6 @@
 import os
 import cv2
 import numpy as np
-import tfr_tools
 import visualization as vs
 
 # 单个样本下采样
@@ -9,7 +8,7 @@ def x_downscale2d(x):
     return cv2.resize(x,None,fx=0.5,fy=0.5,interpolation=cv2.INTER_AREA)
 
 # 拉普拉斯下采样
-def pyrDown(x):
+def x_pyrDown(x):
     return cv2.pyrDown(x)
 
 # 数据集下采样
@@ -19,12 +18,19 @@ def batch_downscale2d(batch):
        ds.append(x_downscale2d(x))
     return np.array(ds)
 
+# 数据集拉式下采样
+def batch_pyrDown(batch):
+    pd = []
+    for x in batch:
+        pd.append(x_pyrDown(x))
+    return np.array(pd)
+
 # 单个样本上采样
 def x_upscale2d(x):
     return cv2.resize(x, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
 
 # 拉普拉斯上采样
-def pyrUp(x):
+def x_pyrUp(x):
     return cv2.pyrUp(x)
 
 # 数据集上采样
@@ -34,12 +40,20 @@ def batch_upscale2d(batch):
        up.append(x_upscale2d(x))
     return np.array(up)
 
+# 数据集拉式下采样
+def batch_pyrUp(batch):
+    pu = []
+    for x in batch:
+        pu.append(x_pyrUp(x))
+    return np.array(pu)
+
 # 单个图像低通滤波
 def x_lpf(x):
-    return pyrUp(pyrDown(x))
+    return x_pyrUp(x_pyrDown(x))
 
 # 数据集低通滤波：
 def batch_lpf(batch):
+    batch = batch.copy()
     for idx in range(int(batch.shape[0])):
         batch[idx] = x_lpf(batch[idx])
     return batch
@@ -50,6 +64,7 @@ def x_hpf(x):
 
 # 数据集高通滤波
 def batch_hpf(batch):
+    batch = batch.copy()
     for idx in range(int(batch.shape[0])):
         batch[idx] = x_hpf(batch[idx])
     return batch
@@ -61,7 +76,7 @@ def x_Lap_Pyd(x,level):
         res = int(x.shape[0])
         if i != level-1:
             PYD[str(res)] = x_hpf(x)
-            x = pyrDown(x)
+            x = x_pyrDown(x)
         else:
             PYD[str(res)] = x
         print('正在构建第%d层..' % (i + 1))
@@ -71,11 +86,12 @@ def x_Lap_Pyd(x,level):
 def batch_Lap_Pyd(batch,level):
     PYD = {}
     for i in range(level):
+        res = int(batch.shape[1])
         if i != level - 1:
-            PYD[str(int(batch.shape[1]))] = batch_hpf(batch)
-            batch = batch_lpf(batch)
+            PYD[str(res)] = batch_hpf(batch)
+            batch = batch_pyrDown(batch)
         else:
-            PYD[str(int(batch.shape[1]))] = batch
+            PYD[str(res)] = batch
         print('正在构建第%d层..' % (i + 1))
     return PYD
 
@@ -85,7 +101,7 @@ def recover_from_lap_pyd(PYD):
     idxs.sort()
     rec = PYD[str(idxs[0])]
     for idx in idxs[1:]:
-        rec = PYD[str(idx)]+pyrUp(rec)
+        rec = PYD[str(idx)] + x_pyrUp(rec)
         print('正在复原分辨率%d'%idx)
     return rec
 
