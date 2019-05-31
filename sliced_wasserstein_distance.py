@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 import CelebA_MultiRes_Preprocess as pp
 import ops
+import sliced_wasserstein as sw
 
 # 数据集指定频带的descriptors: [N,H,W,3] to [N,k,k,3]
 def get_descriptors_for_minibatch(minibatch, nhood_size, nhoods_per_image):
@@ -61,7 +62,9 @@ if __name__ == '__main__':
     # 获取数据集
     batch = pp.get_specfic_data(celeba_path,attr_txt_path,16,1)
     batch = batch[0:8192]  # 2^13
-    vs.CV2_BATCH_RANDOM_SHOW(batch, 1, 25, 5, 5, 0)
+    # vs.CV2_BATCH_RANDOM_SHOW(batch, 1, 25, 5, 5, 0)
+
+
 
 
     # 获取拉式金字塔[128,64,32,16]

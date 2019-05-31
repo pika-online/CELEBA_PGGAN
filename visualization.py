@@ -35,7 +35,7 @@ def CV2_BATCH_SHOW(batch,scale,rows,cols,delay = 0):
     # get resized img shape
     S = cv2.resize(batch[0],(0,0),fx=scale,fy=scale).shape
     # build img sets
-    IMG = np.zeros(shape=[rows*S[0],cols*S[1],C])
+    IMG = np.zeros(shape=[rows*S[0],cols*S[1],C],dtype=batch.dtype)
     # assign
     idx = 0
     for r in range(rows):

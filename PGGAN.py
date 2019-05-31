@@ -343,6 +343,13 @@ def PGGAN(
             epochs, # 训练循环次数
             data_size # 数据集大小
                 ):
+    #-------------------- 超参 --------------------------#
+    lam_gp = 10
+    lam_eps = 0.001
+    beta1 = 0.0
+    beta2 = 0.99
+    max_iters = int(epochs * data_size / batch_size)
+    n_critic = 1  # 判别器训练次数
 
     #---------- （1）创建目录和指定模型路径 -------------#
     GEN_DIR()
@@ -356,16 +363,7 @@ def PGGAN(
     else:
         old_model_path = r'./ckpt/PG_level%d_%s/' % (level, not isTransit)  # 该阶段过度模型
 
-    #------------ (2)设置超参和定义输入输出 --------------#
-    # 训练参数
-    learning_rate = 0.001
-    beta1 = 0.0
-    beta2 = 0.99
-    lam_gp = 10
-    lam_eps = 0.001
-    max_iters = int(epochs*data_size/batch_size)
-    decay = 0.999
-    n_critic = 1  # 判别器训练次数
+    #--------------------- (2)定义输入输出 --------------#
 
     # 图像分辨率
     res = int(2 ** level)
@@ -374,7 +372,7 @@ def PGGAN(
     # 定义数据输入
     real_images = tf.placeholder(name='real_images', shape=[None, res, res, 3], dtype=tf.float32)
     # 训练步数
-    train_steps = tf.Variable(0, trainable=False, name='d_train_steps', dtype=tf.float32) # 等于生成器训练次数
+    train_steps = tf.Variable(0, trainable=False, name='train_steps', dtype=tf.float32) # 等于生成器训练次数
 
     # 生成器和判别器输出
     fake_images = Generator_PG(latents=latents, level=level, reuse=False, isTransit=isTransit,
@@ -445,6 +443,9 @@ def PGGAN(
         VARS_MATCH(old_model_path, old_vars) # 核对
 
     # ------------ (5)梯度下降 --------------#
+    # 学习率衰减
+    learning_rate = tf.train.exponential_decay(0.001,train_steps, data_size / batch_size,0.99, staircase=True)
+
     # G,D梯度下降方式
     d_train_opt = tf.train.AdamOptimizer(learning_rate=learning_rate,
                                          beta1=beta1,
@@ -593,7 +594,8 @@ def PGGAN(
     Saving_Train_Log('losses',losses)
     Saving_Train_Log('WASS',WASS)
     Saving_Train_Log('GenLog',GenLog)
-    Saving_Train_Log('SWD', SWD)
+    if res>=16:
+        Saving_Train_Log('SWD', SWD)
 
     # 清理图
     tf.reset_default_graph()
@@ -609,11 +611,11 @@ if __name__ == '__main__':
     data_size = 13913
 
     # progressive growing
-    PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
+    # PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
+    # PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
+    # PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
+    # PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
+    # PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=False, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=True, epochs=epochs, data_size=data_size)
