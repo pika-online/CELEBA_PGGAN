@@ -605,9 +605,21 @@ if __name__ == '__main__':
     batch_size = 16
     lowest = 2
     highest = 7
+    epochs = 20
+    data_size = 13913
 
     # progressive growing
-    PGGAN(latents_size,batch_size,lowest,highest,level=2,isTransit=False,epochs=20,data_size=13193)
+    PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=False, epochs=epochs, data_size=data_size)
 
 
 
