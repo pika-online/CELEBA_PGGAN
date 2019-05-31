@@ -4,7 +4,6 @@ import pickle
 import CelebA_MultiRes_Preprocess as pp
 import ops
 
-
 # 数据集指定频带的descriptors: [N,H,W,3] to [N,k,k,3]
 def get_descriptors_for_minibatch(minibatch, nhood_size, nhoods_per_image):
     S = minibatch.shape
@@ -53,7 +52,6 @@ def sliced_wasserstein(A, B, dir_repeats, dirs_per_repeat):
         results.append(np.mean(dists))                                  # average over neighborhoods and directions
     return np.mean(results)
 
-# 获取数据集各频带的特征描述器
 if __name__ == '__main__':
 
     # 指定路径

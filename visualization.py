@@ -13,6 +13,9 @@ import numpy as np
 import pickle
 import os
 
+def CV2_CLOSE():
+    cv2.destroyAllWindows()
+
 # define one showing using CV2
 # RGB or GRAY
 def CV2_SHOW(title,img):

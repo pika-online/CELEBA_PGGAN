@@ -58,6 +58,13 @@ def batch_lpf(batch):
         batch[idx] = x_lpf(batch[idx])
     return batch
 
+# 数据集低通滤波2：
+def batch_lpf2(batch):
+    batch = batch.copy()
+    for idx in range(int(batch.shape[0])):
+        batch[idx] = x_pyrUp(x_downscale2d(batch[idx]))
+    return batch
+
 # 单个图像高通滤波
 def x_hpf(x):
     return x-x_lpf(x)
