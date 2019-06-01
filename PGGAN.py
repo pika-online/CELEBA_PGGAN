@@ -477,7 +477,7 @@ def PGGAN(
     WASS = []
 
     # 记录swd
-    if res>=16:
+    if res>=512:
         # 加载训练数据的特征集
         d = open(r'./DESC.des', 'rb')
         DESC = pickle.load(d)
@@ -522,9 +522,9 @@ def PGGAN(
             if isTransit:
                 minibatch_low = ops.batch_lpf2(minibatch)# 低通滤波
                 minibatch_input = trans_alpha * minibatch + (1 - trans_alpha) * minibatch_low  # 数据集过渡处理
-                vs.CV2_BATCH_SHOW((minibatch_input[0:9] + 1) / 2, 1, 3, 3, delay=1)
             else:
                 minibatch_input = minibatch
+            minibatch_input = minibatch_input*2-1
 
             # 训练判别器
             for i in range(n_critic):
@@ -570,7 +570,7 @@ def PGGAN(
                 GenLog.append(gen_samples[0:9])
 
             # 计算swd
-            if steps % 1000 == 0 and res >= 16:
+            if steps % 1000 == 0 and res >= 512:
                 # 获取2^13个fake 样本
                 FAKES = []
                 for i in range(64):
@@ -606,7 +606,7 @@ def PGGAN(
     Saving_Train_Log('losses',losses)
     Saving_Train_Log('WASS',WASS)
     Saving_Train_Log('GenLog',GenLog)
-    if res>=16:
+    if res>=512:
         Saving_Train_Log('SWD', SWD)
 
     # 清理图
@@ -619,22 +619,23 @@ if __name__ == '__main__':
     batch_size = 16
     lowest = 2
     highest = 7
+
     epochs = 20
     data_size = 13913
     current_lr = 0.001
 
     # progressive growing
-    # PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size,lr_start=current_lr)
     PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    # PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
-    # PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
-    # PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
-    # PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size)
-    # PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=False, epochs=epochs, data_size=data_size)
-    # PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=True, epochs=epochs, data_size=data_size)
-    # PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=False, epochs=epochs, data_size=data_size)
-    # PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=True, epochs=epochs, data_size=data_size)
-    # PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
 
 
 

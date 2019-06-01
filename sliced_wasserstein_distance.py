@@ -62,9 +62,7 @@ if __name__ == '__main__':
     # 获取数据集
     batch = pp.get_specfic_data(celeba_path,attr_txt_path,16,1)
     batch = batch[0:8192]  # 2^13
-    # vs.CV2_BATCH_RANDOM_SHOW(batch, 1, 25, 5, 5, 0)
-
-
+    vs.CV2_BATCH_RANDOM_SHOW(batch, 1, 25, 5, 5, 0)
 
 
     # 获取拉式金字塔[128,64,32,16]
