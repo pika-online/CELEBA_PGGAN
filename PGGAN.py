@@ -143,7 +143,7 @@ def COUNT_VARS(vars):
 
 # display paras infomation
 def ShowParasList(d_vars,g_vars,level,isTrans):
-    p = open('./structure/level%d_%d_Paras.txt'%(level,isTrans), 'w')
+    p = open('./structure/level%d_trans_%s_Paras.txt'%(level,isTrans), 'w')
     # D paras
     print('正在记录Discriminator参数信息..')
     p.writelines(['Discriminator_vars_total: %d\n'%COUNT_VARS(d_vars)])
@@ -471,7 +471,7 @@ def PGGAN(
     WASS = []
 
     # 记录swd
-    if res>=512:
+    if res>=16:
         # 加载训练数据的特征集
         d = open(r'./DESC.des', 'rb')
         DESC = pickle.load(d)
@@ -556,7 +556,7 @@ def PGGAN(
                 GenLog.append(gen_samples[0:9])
 
             # 计算swd
-            if steps % 1000 == 0 and res >= 512:
+            if steps % 1000 == 0 and res>=16:
                 # 获取2^13个fake 样本
                 FAKES = []
                 for i in range(64):
@@ -592,7 +592,7 @@ def PGGAN(
     Saving_Train_Log('losses_%dx%d_trans_%s'%(res,res,isTransit),losses)
     Saving_Train_Log('WASS_%dx%d_trans_%s'%(res,res,isTransit),WASS)
     Saving_Train_Log('GenLog_%dx%d_trans_%s'%(res,res,isTransit),GenLog)
-    if res>=512:
+    if res>=16:
         Saving_Train_Log('SWD_%dx%d_trans_%s'%(res,res,isTransit), SWD)
 
     # 清理图

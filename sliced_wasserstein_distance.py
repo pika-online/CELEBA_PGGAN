@@ -3,7 +3,12 @@ import numpy as np
 import pickle
 import CelebA_MultiRes_Preprocess as pp
 import ops
-import sliced_wasserstein as sw
+"""
+ script：sliced wasserstein distance
+ author:Ephemeroptera
+ date:2019-6-1
+ contact:605686962@qq.com
+"""
 
 # 数据集指定频带的descriptors: [N,H,W,3] to [N,k,k,3]
 def get_descriptors_for_minibatch(minibatch, nhood_size, nhoods_per_image):

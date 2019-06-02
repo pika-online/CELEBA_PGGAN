@@ -139,6 +139,7 @@ class API:
         return dist + [np.mean(dist)]
 
 #----------------------------------------------------------------------------
+# 测试
 if __name__ == '__main__':
 
     import CelebA_MultiRes_Preprocess as pp
@@ -151,7 +152,6 @@ if __name__ == '__main__':
     batch = pp.get_specfic_data(celeba_path,attr_txt_path,16,1)
     batch = batch[0:8192]  # 2^13
     batch = (batch).transpose([0,3,1,2])
-    #
 
 
     PYD = generate_laplacian_pyramid(batch,4)
