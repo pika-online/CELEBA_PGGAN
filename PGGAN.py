@@ -342,9 +342,9 @@ def PGGAN(
             isTransit, # 是否过渡
             epochs, # 训练循环次数
             data_size, # 数据集大小
-            lr_start,
                 ):
     #-------------------- 超参 --------------------------#
+    learning_rate = 0.001
     lam_gp = 10
     lam_eps = 0.001
     beta1 = 0.0
@@ -444,12 +444,6 @@ def PGGAN(
         VARS_MATCH(old_model_path, old_vars) # 核对
 
     # ------------ (5)梯度下降 --------------#
-    # 学习率衰减(过渡阶段减小，稳定阶段保持)
-    if isTransit:
-        learning_rate = tf.train.exponential_decay(lr_start,train_steps, data_size / batch_size,0.99,staircase=False)
-    else:
-        learning_rate = lr_start
-
     # G,D梯度下降方式
     d_train_opt = tf.train.AdamOptimizer(learning_rate=learning_rate,
                                          beta1=beta1,
@@ -533,13 +527,6 @@ def PGGAN(
             # 训练生成器
             sess.run(g_train_opt, feed_dict={latents: z})
 
-            # update current learning_rate
-            global current_lr
-            if isTransit:
-                current_lr = sess.run(learning_rate)
-            else:
-                current_lr = learning_rate
-
             # recording training info
             train_loss_d = sess.run(d_loss, feed_dict={real_images: minibatch_input, latents: z})
             train_loss_g = sess.run(g_loss, feed_dict={latents: z})
@@ -556,8 +543,7 @@ def PGGAN(
                   'step:%d/%d..' % (steps, max_iters),
                   'Discriminator Loss: %.4f..' % (train_loss_d),
                   'Generator Loss: %.4f..' % (train_loss_g),
-                  'Wasserstein:%.3f..'%Wasserstein,
-                  'current lr:%.4f..'%current_lr)
+                  'Wasserstein:%.3f..'%Wasserstein)
 
             #  记录训练信息
             if steps % 10 == 0:
@@ -603,11 +589,11 @@ def PGGAN(
         print('迭代结束，耗时：%.2f秒' % (time_end - time_start))
 
     # 保存信息
-    Saving_Train_Log('losses',losses)
-    Saving_Train_Log('WASS',WASS)
-    Saving_Train_Log('GenLog',GenLog)
+    Saving_Train_Log('losses_%dx%d_trans_%s'%(res,res,isTransit),losses)
+    Saving_Train_Log('WASS_%dx%d_trans_%s'%(res,res,isTransit),WASS)
+    Saving_Train_Log('GenLog_%dx%d_trans_%s'%(res,res,isTransit),GenLog)
     if res>=512:
-        Saving_Train_Log('SWD', SWD)
+        Saving_Train_Log('SWD_%dx%d_trans_%s'%(res,res,isTransit), SWD)
 
     # 清理图
     tf.reset_default_graph()
@@ -625,17 +611,17 @@ if __name__ == '__main__':
     current_lr = 0.001
 
     # progressive growing
-    PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=True, epochs=epochs, data_size=data_size,lr_start=current_lr)
-    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=False, epochs=epochs, data_size=data_size,lr_start=current_lr)
+    PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=False, epochs=epochs, data_size=data_size)
 
 
 
