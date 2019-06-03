@@ -40,7 +40,7 @@ def batch_upscale2d(batch):
        up.append(x_upscale2d(x))
     return np.array(up)
 
-# 数据集拉式下采样
+# 数据集拉式上采样
 def batch_pyrUp(batch):
     pu = []
     for x in batch:
