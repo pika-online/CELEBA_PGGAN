@@ -259,7 +259,7 @@ def Generator_PG(latents,level,reuse = False,isTransit = False,trans_alpha = 0.0
         return output
 
 # 定义判别器
-def Discriminator_PG(RGB,level,reuse = False,isTransit = False,trans_alpha = 0.0):
+def Discriminator_PG(RGB,level,reuse = False,isTransit = False,trans_alpha=0.0):
     """
     :param RGB: 输入图像
     :param level: 网络等级（阶段）
@@ -383,6 +383,10 @@ def PGGAN(
     d_fake_logits = Discriminator_PG(RGB=fake_images, level=level, reuse=True, isTransit=isTransit,
                                      trans_alpha=train_steps / max_iters)
 
+    # 测试上一阶段输出
+    graph = tf.get_default_graph()
+    RGB0 = graph.get_tensor_by_name("generator/level_4_toRGB/add:0")
+
     #------------ (3)Wasserstein距离和损失函数 --------------#
     # 定义wasserstein距离
     Wass = tf.reduce_mean(d_real_logits-d_fake_logits)
@@ -439,8 +443,8 @@ def PGGAN(
 
     # 提取上一阶段全部变量
     old_vars = d_vars_old + g_vars_old + d_vars_rgb_old + g_vars_rgb_old
-    if len(old_vars):
-        old_saver = tf.train.Saver(d_vars_old + g_vars_old)
+    if level>lowest:
+        old_saver = tf.train.Saver(old_vars)
         VARS_MATCH(old_model_path, old_vars) # 核对
 
     # ------------ (5)梯度下降 --------------#
@@ -451,6 +455,7 @@ def PGGAN(
     g_train_opt = tf.train.AdamOptimizer(learning_rate=learning_rate,
                                          beta1=beta1,
                                          beta2=beta2).minimize(g_loss, var_list=g_vars, global_step=train_steps)
+    # all_vars = tf.all_variables()
 
     # ------------ (6)数据集读取（TFR） --------------#
     # read TFR
@@ -491,11 +496,11 @@ def PGGAN(
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
         # 加载上一阶段参数
-        if level > lowest:
-            if isTransit:  # 如果处于过渡阶段
-                old_saver.restore(sess, tf.train.latest_checkpoint(old_model_path))  # 恢复历史模型
-            else:  # 如果处于稳定阶段
-                saver.restore(sess, tf.train.latest_checkpoint(old_model_path))  # 继续训练该架构
+        if isTransit:  # 如果处于过渡阶段
+            old_saver.restore(sess, tf.train.latest_checkpoint(old_model_path))  # 恢复历史模型
+            print('成功读取上一阶段参数...')
+        else:  # 如果处于稳定阶段
+            saver.restore(sess, tf.train.latest_checkpoint(old_model_path))  # 继续训练该架构
 
         # 迭代
         time_start = time.time()  # 开始计时
@@ -518,7 +523,12 @@ def PGGAN(
                 minibatch_input = trans_alpha * minibatch + (1 - trans_alpha) * minibatch_low  # 数据集过渡处理
             else:
                 minibatch_input = minibatch
+            # 规格化【-1，1】
             minibatch_input = minibatch_input*2-1
+
+            # RGB0
+            rgb0 = sess.run(RGB0, feed_dict={latents: z})
+            vs.CV2_BATCH_SHOW((rgb0[0:9] + 1) / 2, 1, 3, 3, delay=1)
 
             # 训练判别器
             for i in range(n_critic):
@@ -526,6 +536,8 @@ def PGGAN(
 
             # 训练生成器
             sess.run(g_train_opt, feed_dict={latents: z})
+
+
 
             # recording training info
             train_loss_d = sess.run(d_loss, feed_dict={real_images: minibatch_input, latents: z})
@@ -535,15 +547,16 @@ def PGGAN(
             # recording training_products
             z = np.random.normal(size=[9, latents_size])
             gen_samples = sess.run(fake_images, feed_dict={latents: z})
-            vs.CV2_BATCH_SHOW((gen_samples[0:9] + 1) / 2, 1, 3, 3, delay=1)
+            # vs.CV2_BATCH_SHOW((gen_samples[0:9] + 1) / 2, 1, 3, 3, delay=1)
 
             # 打印
             print('level:%d(%dx%d)..' % (level, res, res),
                   'isTrans:%s..' % isTransit,
-                  'step:%d/%d..' % (steps, max_iters),
+                  'step:%d/%d..' % (sess.run(train_steps), max_iters),
                   'Discriminator Loss: %.4f..' % (train_loss_d),
                   'Generator Loss: %.4f..' % (train_loss_g),
                   'Wasserstein:%.3f..'%Wasserstein)
+
 
             #  记录训练信息
             if steps % 10 == 0:
@@ -605,17 +618,15 @@ if __name__ == '__main__':
     batch_size = 16
     lowest = 2
     highest = 7
-
     epochs = 20
     data_size = 13913
-    current_lr = 0.001
 
     # progressive growing
-    PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
+    # PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
+    # PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
+    # PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
+    # PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
+    # PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=False, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=True, epochs=epochs, data_size=data_size)
