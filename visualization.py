@@ -94,6 +94,11 @@ def losses_show(path):
         plt.legend()
         plt.show()
 
+def PLOT(x):
+    fig = plt.figure(1)
+    plt.plot(x)
+    plt.show()
+
 # showing model paras
 def MODEL_PARAS(old_model_path):
     ckpt = tf.train.get_checkpoint_state(old_model_path)

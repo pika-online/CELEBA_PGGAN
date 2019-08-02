@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 import random
 import pickle
+import os
 
 #------------------------------------------------------ CV -------------------------------------------------------------
 # 关闭全部窗口
@@ -180,6 +181,12 @@ def PICKLE_LOADING(path):
         data = pickle.load(file)
         file.close()
     return data
+
+# 创建文件夹
+def MKDIR(dir):
+    if not os.path.isdir(dir):
+        print('DIR:%s NOT FOUND，BUILDING ON CURRENT PATH..'%dir)
+        os.mkdir(dir)
 
 
 

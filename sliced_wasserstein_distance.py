@@ -1,22 +1,32 @@
-import visualization as vs
 import numpy as np
-import pickle
-import CelebA_MultiRes_Preprocess as pp
-import ops
+import CelebA_Specific_Preprocess as CSP
+import utils as us
+
 """
  script：sliced wasserstein distance
  author:Ephemeroptera
  date:2019-6-1
  contact:605686962@qq.com
 """
+"""
+论文方法：（1）从数据集抽取16384（2^14）张图片，并建立该图片集的拉式金字塔
+         （2）从每张图片的每一层提取128（2^7）个descriptors，那么图片集的每一层将提供（2^21）个descriptors.
+              其中每个descriptors为7x7x3的patch
+          （3）对于每一层全部的descriptors，我们对各个color通道分别进行均值-方差归一化，再reshape成[N,-1]即向量集
+          （4）同上，对同样数目的生成集提取descriptors并归一化，在计算两集合之间的sliced wasserstein distance
+          
+本文方法：计算swd是一个耗时漫长的过程，为了简化计算，我们采样8192（2^13）个样本，每个样本仅提取64个7x7x3 patchs,使用256个投影
+         计算swd。
+"""
 
-# 数据集指定频带的descriptors: [N,H,W,3] to [N,k,k,3]
+# 数据集指定频带的descriptors
 def get_descriptors_for_minibatch(minibatch, nhood_size, nhoods_per_image):
     S = minibatch.shape
+    assert len(S) == 4 and S[3] == 3
     H = nhood_size // 2 # 卷积核半径
     descriptors = []
     for img in minibatch:
-        # 随机采样descriptor
+        # 对每张图片，随机采样descriptor[X,Y]
         X =  np.random.randint(H, S[2] - H,nhoods_per_image)
         Y =  np.random.randint(H, S[1] - H, nhoods_per_image)
         # 裁取每个patch
@@ -26,8 +36,10 @@ def get_descriptors_for_minibatch(minibatch, nhood_size, nhoods_per_image):
 
 # descriptor归一化
 def finalize_descriptors(desc):
+    # 各通道归一化
     desc -= np.mean(desc, axis=(0, 1, 2), keepdims=True)
     desc /= np.std(desc, axis=(0, 1, 2), keepdims=True)
+    # reshape
     desc = desc.reshape(desc.shape[0], -1)
     return desc
 
@@ -36,14 +48,14 @@ def get_descriptors_for_all_level(PYD):
     DESC = {}
     for level in PYD.values():
         res = level.shape[1]
-        desc = get_descriptors_for_minibatch(level, 7, 128)
+        desc = get_descriptors_for_minibatch(level, 7, 64)
         desc = finalize_descriptors(desc)
         DESC[str(res)] = desc
         print('已提取%dx%d频带descriptors..' % (res, res))
     return DESC
 
 # 计算sliced wasserstein distance
-def sliced_wasserstein(A, B, dir_repeats, dirs_per_repeat):
+def sliced_wasserstein_distance(A, B, dir_repeats, dirs_per_repeat):
     assert A.ndim == 2 and A.shape == B.shape                           # (neighborhood, descriptor_component)
     results = []
     for repeat in range(dir_repeats):
@@ -65,30 +77,27 @@ if __name__ == '__main__':
     attr_txt_path = r"I:\CELEBA\list_attr_celeba.txt"
 
     # 获取数据集
-    batch = pp.get_specfic_data(celeba_path,attr_txt_path,16,1)
+    batch = CSP.get_specfic_data(celeba_path, attr_txt_path, 16, 1)
     batch = batch[0:8192]  # 2^13
-    vs.CV2_BATCH_RANDOM_SHOW(batch, 1, 25, 5, 5, 0)
+    us.CV2_IMSHOW_NHWC_RAMDOM(batch,1,25,5,5,'batch',0)
 
+    # 获取拉式金字塔
+    PYD = us.lap_pyd_nhwc(batch,4)
+    for level in PYD.values():
+        us.CV2_IMSHOW_NHWC_RAMDOM(level, 1, 25, 5, 5, 'batch', 0)
 
-    # 获取拉式金字塔[128,64,32,16]
-    PYD = ops.batch_Lap_Pyd(batch,4)
-    for pyd in PYD.values():
-        vs.CV2_BATCH_RANDOM_SHOW(pyd, 1, 25, 5, 5, 0)
-
-    # 获取样本各频带descriptor
+    # 获取样本集各频带descriptors
     DESC = get_descriptors_for_all_level(PYD)
 
     # 保存
-    with open('./DESC.des', 'wb') as d:
-        pickle.dump(DESC, d)
-        d.close()
+    us.PICKLE_SAVING(DESC,r'./DESC.desc')
 
     # 测试
-    H = ops.batch_hpf(batch)
-    h_desc = get_descriptors_for_minibatch(H, 7, 128)
+    HPF = us.hpf_nhwc(batch)
+    h_desc = get_descriptors_for_minibatch(HPF, 7, 64)
     h_desc = finalize_descriptors(h_desc)
-    swd = sliced_wasserstein(h_desc, DESC['128'], 4, 128) * 1e3
-    print(swd)
+    swd = sliced_wasserstein_distance(h_desc, DESC['128'], 4, 64) * 1e3
+    print('swd = ',swd)
 
 
 
