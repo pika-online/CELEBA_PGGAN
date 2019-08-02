@@ -94,9 +94,9 @@ if __name__ == '__main__':
 
     # 测试
     HPF = us.hpf_nhwc(batch)
-    h_desc = get_descriptors_for_minibatch(HPF, 7, 64)
+    h_desc = get_descriptors_for_minibatch(HPF, 7, 128)
     h_desc = finalize_descriptors(h_desc)
-    swd = sliced_wasserstein_distance(h_desc, DESC['128'], 4, 64) * 1e3
+    swd = sliced_wasserstein_distance(h_desc, DESC['128'], 4, 128) * 1e3
     print('swd = ',swd)
 
 

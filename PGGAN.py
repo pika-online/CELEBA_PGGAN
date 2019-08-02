@@ -1,8 +1,10 @@
 import time
+import os
 from ops import *
 import utils as us
 import tfr_tools as tfr
 import sliced_wasserstein_distance as swd
+os.environ['CUDA_VISIBLE_DEVICES']='0'
 
 
 def PGGAN(
@@ -150,9 +152,9 @@ def PGGAN(
     SWD = []
 
     # 加载数据集的descriptors集合
-    if res>=16:
-        # 加载训练数据的特征集
-        DESC = us.PICKLE_LOADING(r'./DESC.desc')
+    # if res>=16:
+    #     # 加载训练数据的特征集
+    #     DESC = us.PICKLE_LOADING(r'./DESC.desc')
 
     # 开启会话
     with tf.Session(config=config) as sess:
@@ -187,7 +189,7 @@ def PGGAN(
             # 格式修正
             minibatch = np.reshape(minibatch,[-1,res,res,3]).astype(np.float32)
             # 数据集显示
-            us.CV2_IMSHOW_NHWC_RAMDOM(minibatch, 1, 9, 3, 3, 'minibatch', 0)
+            # us.CV2_IMSHOW_NHWC_RAMDOM(minibatch, 1, 9, 3, 3, 'minibatch', 0)
 
             # 数据集过度处理
             if isTransit:
@@ -211,7 +213,7 @@ def PGGAN(
             # recording training_products
             z = np.random.normal(size=[9, latents_size])
             gen_samples = sess.run(fake_images, feed_dict={latents: z})
-            us.CV2_IMSHOW_NHWC_RAMDOM((gen_samples+1)/2, 1, 9, 3, 3, 'minibatch', 0)
+            us.CV2_IMSHOW_NHWC_RAMDOM((gen_samples+1)/2, 1, 9, 3, 3, 'minibatch', 10)
 
             # 打印
             print('level:%d(%dx%d)..' % (level, res, res),
@@ -233,25 +235,25 @@ def PGGAN(
                 # GenLog.append(gen_samples[0:9])
 
             # 计算swd
-            if steps % 1000 == 0 and res>=16:
-                # 获取2^13个fake 样本
-                FAKES = []
-                for i in range(64):
-                    z = np.random.normal(size=[128, latents_size])
-                    fakes = sess.run(fake_images, feed_dict={latents: z})
-                    FAKES.append(fakes)
-                FAKES = np.concatenate(FAKES, axis=0)
-                FAKES = (FAKES + 1) / 2
-                # 计算与数据集拉式金字塔指定层的swd
-                if res >16:
-                    FAKES = us.hpf_nhwc(FAKES) # 获取高频信号
-                d_desc = swd.get_descriptors_for_minibatch(FAKES, 7, 64)# 提取特征
-                del FAKES
-                d_desc = swd.finalize_descriptors(d_desc)
-                swd2 = swd.sliced_wasserstein_distance(d_desc, DESC[str(res)], 4, 64) * 1e3 # 计算swd*1e3
-                SWD.append([steps,swd2])
-                print('当前生成样本swd(x1e3):', swd2, '...')
-                del d_desc
+            # if steps % 1000 == 0 and res>=16:
+            #     # 获取2^13个fake 样本
+            #     FAKES = []
+            #     for i in range(64):
+            #         z = np.random.normal(size=[128, latents_size])
+            #         fakes = sess.run(fake_images, feed_dict={latents: z})
+            #         FAKES.append(fakes)
+            #     FAKES = np.concatenate(FAKES, axis=0)
+            #     FAKES = (FAKES + 1) / 2
+            #     # 计算与数据集拉式金字塔指定层的swd
+            #     if res >16:
+            #         FAKES = us.hpf_nhwc(FAKES) # 获取高频信号
+            #     d_desc = swd.get_descriptors_for_minibatch(FAKES, 7, 64)# 提取特征
+            #     del FAKES
+            #     d_desc = swd.finalize_descriptors(d_desc)
+            #     swd2 = swd.sliced_wasserstein_distance(d_desc, DESC[str(res)], 4, 64) * 1e3 # 计算swd*1e3
+            #     SWD.append([steps,swd2])
+            #     print('当前生成样本swd(x1e3):', swd2, '...')
+            #     del d_desc
 
             # 保存生成模型
             if steps % 1000 == 0:
@@ -270,8 +272,8 @@ def PGGAN(
     us.PICKLE_SAVING(losses,'losses_%dx%d_trans_%s'%(res,res,isTransit))
     us.PICKLE_SAVING(Wass, 'Wass_%dx%d_trans_%s' % (res, res, isTransit))
     us.PICKLE_SAVING(Genlog, 'Genlog_%dx%d_trans_%s' % (res, res, isTransit))
-    if res>=16:
-        us.PICKLE_SAVING(SWD,'SWD_%dx%d_trans_%s'%(res,res,isTransit))
+    # if res>=16:
+    #     us.PICKLE_SAVING(SWD,'SWD_%dx%d_trans_%s'%(res,res,isTransit))
 
     # 清理图
     tf.reset_default_graph()

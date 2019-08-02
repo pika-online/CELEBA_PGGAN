@@ -10,7 +10,9 @@ import numpy as np
 import random
 import pickle
 import os
-
+#--------------------------------------------------- format ------------------------------------------------------------
+def UINT8(float):
+    return np.uint8(float*255)
 #------------------------------------------------------ CV -------------------------------------------------------------
 # 关闭全部窗口
 def CV2_ALL_CLOSE():
@@ -196,6 +198,7 @@ test
 if __name__ == '__main__':
 
     # 选择图片
+    # img = UINT8(cv2.imread(r'./man.jpg')/255)
     img = cv2.imread(r'./man.jpg')/255
     img = cv2.resize(img,(256,512))
     CV2_IMSHOW_HWC(img)
