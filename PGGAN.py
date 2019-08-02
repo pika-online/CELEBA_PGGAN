@@ -152,7 +152,7 @@ def PGGAN(
     # 加载数据集的descriptors集合
     if res>=16:
         # 加载训练数据的特征集
-        DESC = us.PICKLE_LOADING(r'./DESC.des')
+        DESC = us.PICKLE_LOADING(r'./DESC.desc')
 
     # 开启会话
     with tf.Session(config=config) as sess:
