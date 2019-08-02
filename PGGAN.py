@@ -75,6 +75,7 @@ def PGGAN(
     # 求得判别器梯度
     gradients = tf.gradients(inte_logit, [interpolated, ])[0]
     slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=[1, 2, 3]))
+    slopes_m = tf.reduce_mean(slopes)
     # 定义惩罚项
     gradient_penalty = tf.reduce_mean((slopes - 1) ** 2)
     # d_loss加入惩罚项
@@ -126,7 +127,7 @@ def PGGAN(
 
     # ------------ (6)模型保存与恢复 ------------------#
     # 保存本阶段所有变量
-    saver = tf.train.Saver(d_vars + g_vars + adam_vars)
+    saver = tf.train.Saver(d_vars + g_vars + adam_vars,max_to_keep=3)
     # 提取上一阶段所有变量
     if level > lowest:
         VARS_MATCH(old_model_path, old_vars)  # 核对
@@ -193,8 +194,10 @@ def PGGAN(
 
             # 数据集过度处理
             if isTransit:
-                minibatch_low = us.lpf_nhwc(minibatch)
-                minibatch_input = trans_alpha * minibatch + (1 - trans_alpha) * minibatch_low  # 数据集过渡处理
+                # minibatch_low = us.lpf_nhwc(minibatch)
+                # minibatch_input = trans_alpha * minibatch + (1 - trans_alpha) * minibatch_low  # 数据集过渡处理
+                trans_res = int(0.5*res+0.5*trans_alpha*res)
+                minibatch_input = us.upsize_nhwc(us.downsize_nhwc(minibatch,(trans_res,trans_res)),(res,res))
             else:
                 minibatch_input = minibatch
             # 规格化【-1，1】
@@ -208,7 +211,7 @@ def PGGAN(
             sess.run(g_train_opt, feed_dict={latents: z})
 
             # recording training info
-            [d_loss2,g_loss2,wass_dist2] = sess.run([d_loss,g_loss,wass_dist], feed_dict={real_images: minibatch_input, latents: z})
+            [d_loss2,g_loss2,wass_dist2,slopes2] = sess.run([d_loss,g_loss,wass_dist,slopes_m], feed_dict={real_images: minibatch_input, latents: z})
 
             # recording training_products
             z = np.random.normal(size=[9, latents_size])
@@ -221,7 +224,8 @@ def PGGAN(
                   'step:%d/%d..' % (sess.run(train_steps), max_iters),
                   'Discriminator Loss: %.4f..' % (d_loss2),
                   'Generator Loss: %.4f..' % (g_loss2),
-                  'Wasserstein:%.3f..'%wass_dist2)
+                  'Wasserstein:%.3f..'% wass_dist2,
+                  'Slopes:%.3f..'%slopes2)
 
 
             #  记录训练信息
@@ -269,9 +273,9 @@ def PGGAN(
         print('迭代结束，耗时：%.2f秒' % (time_end - time_start))
 
     # 保存信息
-    us.PICKLE_SAVING(losses,'losses_%dx%d_trans_%s'%(res,res,isTransit))
-    us.PICKLE_SAVING(Wass, 'Wass_%dx%d_trans_%s' % (res, res, isTransit))
-    us.PICKLE_SAVING(Genlog, 'Genlog_%dx%d_trans_%s' % (res, res, isTransit))
+    us.PICKLE_SAVING(losses,'./trainlog/losses_%dx%d_trans_%s'%(res,res,isTransit))
+    us.PICKLE_SAVING(Wass, './trainlog/Wass_%dx%d_trans_%s' % (res, res, isTransit))
+    # us.PICKLE_SAVING(Genlog, './trainlog/Genlog_%dx%d_trans_%s' % (res, res, isTransit))
     # if res>=16:
     #     us.PICKLE_SAVING(SWD,'SWD_%dx%d_trans_%s'%(res,res,isTransit))
 
@@ -294,7 +298,7 @@ if __name__ == '__main__':
 
     # progressive growing
     time0 = time.time()  # 开始计时
-    PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
+    # PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)

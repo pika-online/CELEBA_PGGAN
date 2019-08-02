@@ -84,7 +84,7 @@ if __name__ == '__main__':
     # 获取拉式金字塔
     PYD = us.lap_pyd_nhwc(batch,4)
     for level in PYD.values():
-        us.CV2_IMSHOW_NHWC_RAMDOM(level, 1, 25, 5, 5, 'batch', 0)
+        us.CV2_IMSHOW_NHWC_RAMDOM(us.UINT8(level), 1, 25, 5, 5, 'batch', 0)
 
     # 获取样本集各频带descriptors
     DESC = get_descriptors_for_all_level(PYD)
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
     # 测试
     HPF = us.hpf_nhwc(batch)
-    h_desc = get_descriptors_for_minibatch(HPF, 7, 128)
+    h_desc = get_descriptors_for_minibatch(HPF, 7, 64)
     h_desc = finalize_descriptors(h_desc)
     swd = sliced_wasserstein_distance(h_desc, DESC['128'], 4, 128) * 1e3
     print('swd = ',swd)
