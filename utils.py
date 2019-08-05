@@ -6,6 +6,7 @@ mail:605686962@qq.com
 
 """
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import random
 import pickle
@@ -13,6 +14,11 @@ import os
 #--------------------------------------------------- format ------------------------------------------------------------
 def UINT8(float):
     return np.uint8(float*255)
+
+#--------------------------------------------------- PLT ------------------------------------------------------------
+def PLT_PLOT(x):
+    plt.plot(x)
+    plt.show()
 #------------------------------------------------------ CV -------------------------------------------------------------
 # 关闭全部窗口
 def CV2_ALL_CLOSE():
@@ -201,7 +207,7 @@ def PICKLE_SAVING(data, path):
 
 # 加载数据
 def PICKLE_LOADING(path):
-    with open(path, 'wb') as file:
+    with open(path, 'rb') as file:
         data = pickle.load(file)
         file.close()
     return data

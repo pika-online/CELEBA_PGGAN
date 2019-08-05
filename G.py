@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import utils
+
 import os
 # os.environ['CUDA_VISIBLE_DEVICES']='0'
 
@@ -32,5 +33,7 @@ with tf.Session() as sess:
     G = (sess.run(fake_SS,feed_dict={latents:z})+1)/2
     utils.CV2_IMSHOW_NHWC_RAMDOM(G,1,25,5,5,'G')
 
+    Wass = utils.PICKLE_LOADING(r'./trainlog/Wass_8x8_trans_True')
+    utils.PLT_PLOT(Wass[1])
 
 
