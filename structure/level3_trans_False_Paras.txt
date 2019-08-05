@@ -1,0 +1,27 @@
+Discriminator_vars_total: 11281409
+discriminator/level_3_fromRGB/weight:0(1, 1, 3, 512)
+discriminator/level_3_fromRGB/bias:0(512,)
+discriminator/scale_3/CONV0/weight:0(3, 3, 512, 512)
+discriminator/scale_3/CONV0/bias:0(512,)
+discriminator/scale_3/CONV1/weight:0(3, 3, 512, 512)
+discriminator/scale_3/CONV1/bias:0(512,)
+discriminator/scale_2/CONV0/weight:0(3, 3, 513, 512)
+discriminator/scale_2/CONV0/bias:0(512,)
+discriminator/scale_2/Dense0/weight:0(8192, 512)
+discriminator/scale_2/Dense0/bias:0(512,)
+discriminator/scale_2/Dense1/weight:0(512, 1)
+discriminator/scale_2/Dense1/bias:0(1,)
+
+
+
+Generator_vars_total: 11281409
+generator/scale_2/Dense0/weight:0(512, 8192)
+generator/scale_2/Dense0/bias:0(512,)
+generator/scale_2/CONV1/weight:0(3, 3, 512, 512)
+generator/scale_2/CONV1/bias:0(512,)
+generator/scale_3/CONV0/weight:0(3, 3, 512, 512)
+generator/scale_3/CONV0/bias:0(512,)
+generator/scale_3/CONV1/weight:0(3, 3, 512, 512)
+generator/scale_3/CONV1/bias:0(512,)
+generator/level_3_toRGB/weight:0(1, 1, 512, 3)
+generator/level_3_toRGB/bias:0(3,)
