@@ -238,7 +238,7 @@ def PGGAN(
                 # （2）记录生成样本
                 # GenLog.append(gen_samples[0:9])
 
-            # 计算swd
+            # 计算swd模块
             # if steps % 1000 == 0 and res>=16:
             #     # 获取2^13个fake 样本
             #     FAKES = []
@@ -298,7 +298,7 @@ if __name__ == '__main__':
 
     # progressive growing
     time0 = time.time()  # 开始计时
-    # PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
+    PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
     PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
