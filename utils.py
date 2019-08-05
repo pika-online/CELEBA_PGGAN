@@ -201,7 +201,7 @@ def lap_pyd_nhwc(nhwc,N):
 # 保存数据
 def PICKLE_SAVING(data, path):
     with open(path, 'wb') as file:
-        pickle.dump(data, file)
+        pickle.dump(np.array(data), file)
         file.close()
         print('Saving to %s successfully' % path)
 

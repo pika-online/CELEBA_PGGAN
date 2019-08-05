@@ -88,12 +88,14 @@ if __name__ == '__main__':
 
     # 获取样本集各频带descriptors
     DESC = get_descriptors_for_all_level(PYD)
+    del PYD
 
     # 保存
     us.PICKLE_SAVING(DESC,r'./DESC.desc')
 
     # 测试
     HPF = us.hpf_nhwc(batch)
+    del batch
     h_desc = get_descriptors_for_minibatch(HPF, 7, 64)
     h_desc = finalize_descriptors(h_desc)
     swd = sliced_wasserstein_distance(h_desc, DESC['128'], 4, 128) * 1e3
