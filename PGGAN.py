@@ -7,7 +7,7 @@ import sliced_wasserstein_distance as swd
 os.environ['CUDA_VISIBLE_DEVICES']='0'
 
 
-def PGGAN(
+def PGGAN(  id ,     # PG模型序号
             latents_size, # 噪声型号
             batch_size, # 批型号
             lowest,# 最低网络级数
@@ -29,13 +29,13 @@ def PGGAN(
     #---------- （1）创建目录和指定模型路径 -------------#
 
     # 当前模型路径
-    model_path = './ckpt/PG_level%d_%s' % (level, isTransit)
+    model_path = './ckpt/PG%d_level%d_%s' % (id,level, isTransit)
     us.MKDIR(model_path)
     # 上一级网络模型路径
     if isTransit:
-        old_model_path = r'./ckpt/PG_level%d_%s/' % (level - 1, not isTransit)  # 上一阶段稳定模型
+        old_model_path = r'./ckpt/PG%d_level%d_%s/' % (id,level - 1, not isTransit)  # 上一阶段稳定模型
     else:
-        old_model_path = r'./ckpt/PG_level%d_%s/' % (level, not isTransit)  # 该阶段过度模型
+        old_model_path = r'./ckpt/PG%d_level%d_%s/' % (id,level, not isTransit)  # 该阶段过度模型
 
     #--------------------- (2)定义输入输出 --------------#
 
@@ -153,9 +153,9 @@ def PGGAN(
     SWD = []
 
     # 加载数据集的descriptors集合
-    # if res>=16:
-    #     # 加载训练数据的特征集
-    #     DESC = us.PICKLE_LOADING(r'./DESC.desc')
+    if res>=16:
+        # 加载训练数据的特征集
+        DESC = us.PICKLE_LOADING(r'./DESC.desc')
 
     # 开启会话
     with tf.Session(config=config) as sess:
@@ -239,25 +239,25 @@ def PGGAN(
                 # GenLog.append(gen_samples[0:9])
 
             # 计算swd模块
-            # if steps % 1000 == 0 and res>=16:
-            #     # 获取2^13个fake 样本
-            #     FAKES = []
-            #     for i in range(64):
-            #         z = np.random.normal(size=[128, latents_size])
-            #         fakes = sess.run(fake_images, feed_dict={latents: z})
-            #         FAKES.append(fakes)
-            #     FAKES = np.concatenate(FAKES, axis=0)
-            #     FAKES = (FAKES + 1) / 2
-            #     # 计算与数据集拉式金字塔指定层的swd
-            #     if res >16:
-            #         FAKES = us.hpf_nhwc(FAKES) # 获取高频信号
-            #     d_desc = swd.get_descriptors_for_minibatch(FAKES, 7, 64)# 提取特征
-            #     del FAKES
-            #     d_desc = swd.finalize_descriptors(d_desc)
-            #     swd2 = swd.sliced_wasserstein_distance(d_desc, DESC[str(res)], 4, 64) * 1e3 # 计算swd*1e3
-            #     SWD.append([steps,swd2])
-            #     print('当前生成样本swd(x1e3):', swd2, '...')
-            #     del d_desc
+            if steps % 1000 == 0 and res>=16:
+                # 获取2^13个fake 样本
+                FAKES = []
+                for i in range(64):
+                    z = np.random.normal(size=[128, latents_size])
+                    fakes = sess.run(fake_images, feed_dict={latents: z})
+                    FAKES.append(fakes)
+                FAKES = np.concatenate(FAKES, axis=0)
+                FAKES = (FAKES + 1) / 2
+                # 计算与数据集拉式金字塔指定层的swd
+                if res >16:
+                    FAKES = us.hpf_nhwc(FAKES) # 获取高频信号
+                d_desc = swd.get_descriptors_for_minibatch(FAKES, 7, 64)# 提取特征
+                del FAKES
+                d_desc = swd.finalize_descriptors(d_desc)
+                swd2 = swd.sliced_wasserstein_distance(d_desc, DESC[str(res)], 4, 64) * 1e3 # 计算swd*1e3
+                SWD.append([steps,swd2])
+                print('当前生成样本swd(x1e3):', swd2, '...')
+                del d_desc
 
             # 保存生成模型
             if steps % 1000 == 0:
@@ -276,8 +276,8 @@ def PGGAN(
     us.PICKLE_SAVING(losses,'./trainlog/losses_%dx%d_trans_%s'%(res,res,isTransit))
     us.PICKLE_SAVING(Wass, './trainlog/Wass_%dx%d_trans_%s' % (res, res, isTransit))
     # us.PICKLE_SAVING(Genlog, './trainlog/Genlog_%dx%d_trans_%s' % (res, res, isTransit))
-    # if res>=16:
-    #     us.PICKLE_SAVING(SWD,'SWD_%dx%d_trans_%s'%(res,res,isTransit))
+    if res>=16:
+        us.PICKLE_SAVING(SWD,'SWD_%dx%d_trans_%s'%(res,res,isTransit))
 
     # 清理图
     tf.reset_default_graph()
@@ -298,17 +298,17 @@ if __name__ == '__main__':
 
     # progressive growing
     time0 = time.time()  # 开始计时
-    PGGAN(latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=5, isTransit=False, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=6, isTransit=False, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(latents_size, batch_size, lowest, highest, level=7, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(0,latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
+    PGGAN(1,latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(2,latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(3,latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(4,latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(5,latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(6,latents_size, batch_size, lowest, highest, level=5, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(7,latents_size, batch_size, lowest, highest, level=6, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(8,latents_size, batch_size, lowest, highest, level=6, isTransit=False, epochs=epochs, data_size=data_size)
+    PGGAN(9,latents_size, batch_size, lowest, highest, level=7, isTransit=True, epochs=epochs, data_size=data_size)
+    PGGAN(10,latents_size, batch_size, lowest, highest, level=7, isTransit=False, epochs=epochs, data_size=data_size)
     time1 = time.time()  # 开始计时
     print('全部训练耗费时间：%.2f..'%(time1-time0))
 

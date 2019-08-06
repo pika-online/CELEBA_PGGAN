@@ -34,7 +34,7 @@ def build_attr_list(attr_txt_path):
 在attr_list.txt中我们可以轻松的选择我们想要的属性，并在标签文件list_attr_celeba.txt文件中获得该属性下全部图像的文件名。
 并读取图片且resize目标大小（flag=1表示属性为正例）_
 """
-def get_specfic_data(celeba_path,attr_txt_path,attr_idx,flag=1,resize=(128,128),show=False):
+def get_specfic_data(celeba_path,attr_txt_path,attr_idx,flag=1,expect_total=20000,resize=(128,128),show=False):
     # 打开attr.txt
     f = open(attr_txt_path)
     # 数目和属性
@@ -61,6 +61,9 @@ def get_specfic_data(celeba_path,attr_txt_path,attr_idx,flag=1,resize=(128,128),
                 cv2.imshow('CELEBA',img)
                 cv2.waitKey(0)
             data.append(img)
+        # 设定期望数据量
+        if num == expect_total:
+            break
         # 读取下一数据
         line = f.readline()
     # 返回数据集并归一化
@@ -76,7 +79,7 @@ if __name__ == '__main__':
     build_attr_list(attr_txt_path)
 
     # 获取目标数据
-    data = get_specfic_data(celeba_path,attr_txt_path,16,1)
+    data = get_specfic_data(celeba_path,attr_txt_path,9,1)
 
     # 多尺度缩放 和 保存 [128,64,32,16,8,4]
     for i in range(6):
@@ -93,5 +96,5 @@ if __name__ == '__main__':
         # 设置标签
         label = np.zeros(lower.shape[0], dtype=np.int8)
         # 保存
-        savename = './TFR/celeba_glass_%dx%d' % (res, res)
+        savename = './TFR/celeba_attr9_%dx%d' % (res, res)
         tfr.Saving_All_TFR(savename, lower.astype(np.float32), label, 5)
