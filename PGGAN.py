@@ -33,9 +33,9 @@ def PGGAN(  id ,     # PG模型序号
     us.MKDIR(model_path)
     # 上一级网络模型路径
     if isTransit:
-        old_model_path = r'./ckpt/PG%d_level%d_%s/' % (id,level - 1, not isTransit)  # 上一阶段稳定模型
+        old_model_path = r'./ckpt/PG%d_level%d_%s/' % (id-1,level - 1, not isTransit)  # 上一阶段稳定模型
     else:
-        old_model_path = r'./ckpt/PG%d_level%d_%s/' % (id,level, not isTransit)  # 该阶段过度模型
+        old_model_path = r'./ckpt/PG%d_level%d_%s/' % (id-1,level, not isTransit)  # 该阶段过度模型
 
     #--------------------- (2)定义输入输出 --------------#
 
@@ -135,7 +135,7 @@ def PGGAN(  id ,     # PG模型序号
 
     # ------------ (7)数据集读取（TFR） --------------#
     # read TFR
-    [num, data, label] = tfr.Reading_TFR(sameName=r'./TFR/celeba_glass_%dx%d-*'%(res,res) ,
+    [num, data, label] = tfr.Reading_TFR(sameName=r'./TFR/celeba_%dx%d-*'%(res,res) ,
                                          isShuffle=False, datatype=tf.float32, labeltype=tf.int8)
     # # get batch
     [num_batch, data_batch, label_batch] = tfr.Reading_Batch_TFR(num, data, label, data_size=res*res*3,
@@ -277,7 +277,7 @@ def PGGAN(  id ,     # PG模型序号
     us.PICKLE_SAVING(Wass, './trainlog/Wass_%dx%d_trans_%s' % (res, res, isTransit))
     # us.PICKLE_SAVING(Genlog, './trainlog/Genlog_%dx%d_trans_%s' % (res, res, isTransit))
     if res>=16:
-        us.PICKLE_SAVING(SWD,'SWD_%dx%d_trans_%s'%(res,res,isTransit))
+        us.PICKLE_SAVING(SWD,'./trainlog/SWD_%dx%d_trans_%s'%(res,res,isTransit))
 
     # 清理图
     tf.reset_default_graph()
@@ -289,8 +289,8 @@ if __name__ == '__main__':
     batch_size = 16
     lowest = 2
     highest = 7
-    epochs = 20
-    data_size = 13913
+    epochs = 10
+    data_size = 30000
 
     us.MKDIR('ckpt')
     us.MKDIR('structure')

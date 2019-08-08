@@ -78,7 +78,7 @@ while (True):
         pwd = root_dir + src_dir + '/' +trans_dir
         trans_files = host_cmd_exe(client, 'cd %s \n ls\n' % pwd)
         # 传输全部子文件
-        if 'network.ckpt' in trans_files and ready_trans:
+        if 'network.ckpt-17000.data-00000-of-00001' in trans_files and ready_trans:
             for id, filename in enumerate(trans_files):
                 sftp.get(pwd + '/' + filename, os.path.join(local_dir, filename))
                 print('transfering %s from %s to %s' % (filename, pwd, local_dir))
@@ -88,7 +88,7 @@ while (True):
                     print('文件传输完毕！')
                     # 任务结束(删除其他目录并跳出)
                     if 'PG10_level7_False' in host_dir_list:
-                        stdin, stdout, _ = client.exec_command('rm -rf %s \n rm -rf %s \n' % \
+                        stdin, stdout, _ = client.exec_command('rm -r %s \n rm -r %s \n' % \
                                                                (root_dir + src_dir + '/' + host_dir_list[0],
                                                                 root_dir + src_dir + '/' + host_dir_list[1]), get_pty=True)
                         break

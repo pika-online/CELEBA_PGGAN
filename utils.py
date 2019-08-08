@@ -65,6 +65,21 @@ def CV2_IMSHOW_NHWC_RAMDOM(NHWC, scale, N, rows, cols,title='img', delay = 0):
     rands = NHWC[idx]
     CV2_IMSHOW_NHWC(rands, scale, rows, cols, title, delay)
 
+# 人脸检测
+face_cascade = cv2.CascadeClassifier(r'F:\ww\CELEBA_PGGAN\haarcascade_frontalface_default.xml')
+def CV2_CROP_FACE(img):
+    bboxses = face_cascade.detectMultiScale(img, 1.3, 5)
+    face = None
+    if len(bboxses):
+        bbox = bboxses[0]
+        x = bbox[0]
+        y = bbox[1]
+        w = bbox[2]
+        h = bbox[3]
+        face = img[y:y+h,x:x+w]
+    return face
+
+
 #------------------------------------------------------ hwc ------------------------------------------------------------
 
 # 单个图片上采样
