@@ -216,7 +216,7 @@ def PGGAN(  id ,     # PG模型序号
             # recording training_products
             z = np.random.normal(size=[9, latents_size])
             gen_samples = sess.run(fake_images, feed_dict={latents: z})
-            us.CV2_IMSHOW_NHWC_RAMDOM((gen_samples+1)/2, 1, 9, 3, 3, 'minibatch', 10)
+            us.CV2_IMSHOW_NHWC_RAMDOM((gen_samples+1)/2, 1, 9, 3, 3, 'GEN', 10)
 
             # 打印
             print('level:%d(%dx%d)..' % (level, res, res),
@@ -254,7 +254,7 @@ def PGGAN(  id ,     # PG模型序号
                 d_desc = swd.get_descriptors_for_minibatch(FAKES, 7, 64)# 提取特征
                 del FAKES
                 d_desc = swd.finalize_descriptors(d_desc)
-                swd2 = swd.sliced_wasserstein_distance(d_desc, DESC[str(res)], 4, 64) * 1e3 # 计算swd*1e3
+                swd2 = swd.sliced_wasserstein_distance(d_desc, DESC[str(res)], 4, 128) * 1e3 # 计算swd*1e3
                 SWD.append([steps,swd2])
                 print('当前生成样本swd(x1e3):', swd2, '...')
                 del d_desc
@@ -273,11 +273,11 @@ def PGGAN(  id ,     # PG模型序号
         print('迭代结束，耗时：%.2f秒' % (time_end - time_start))
 
     # 保存信息
-    us.PICKLE_SAVING(losses,'./trainlog/losses_%dx%d_trans_%s'%(res,res,isTransit))
-    us.PICKLE_SAVING(Wass, './trainlog/Wass_%dx%d_trans_%s' % (res, res, isTransit))
+    us.PICKLE_SAVING(np.array(losses),'./trainlog/losses_%dx%d_trans_%s'%(res,res,isTransit))
+    us.PICKLE_SAVING(np.array(Wass), './trainlog/Wass_%dx%d_trans_%s' % (res, res, isTransit))
     # us.PICKLE_SAVING(Genlog, './trainlog/Genlog_%dx%d_trans_%s' % (res, res, isTransit))
     if res>=16:
-        us.PICKLE_SAVING(SWD,'./trainlog/SWD_%dx%d_trans_%s'%(res,res,isTransit))
+        us.PICKLE_SAVING(np.array(SWD),'./trainlog/SWD_%dx%d_trans_%s'%(res,res,isTransit))
 
     # 清理图
     tf.reset_default_graph()
@@ -298,9 +298,9 @@ if __name__ == '__main__':
 
     # progressive growing
     time0 = time.time()  # 开始计时
-    PGGAN(0,latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
-    PGGAN(1,latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
-    PGGAN(2,latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
+    # PGGAN(0,latents_size,batch_size,  lowest, highest, level=2, isTransit=False,epochs=epochs,data_size=data_size)
+    # PGGAN(1,latents_size, batch_size, lowest, highest, level=3, isTransit=True, epochs=epochs, data_size=data_size)
+    # PGGAN(2,latents_size, batch_size, lowest, highest, level=3, isTransit=False, epochs=epochs, data_size=data_size)
     PGGAN(3,latents_size, batch_size, lowest, highest, level=4, isTransit=True, epochs=epochs, data_size=data_size)
     PGGAN(4,latents_size, batch_size, lowest, highest, level=4, isTransit=False, epochs=epochs, data_size=data_size)
     PGGAN(5,latents_size, batch_size, lowest, highest, level=5, isTransit=True, epochs=epochs, data_size=data_size)

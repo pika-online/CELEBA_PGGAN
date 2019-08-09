@@ -68,17 +68,16 @@ def sliced_wasserstein_distance(A, B, dir_repeats, dirs_per_repeat):
         projB = np.sort(projB, axis=0)
         dists = np.abs(projA - projB)                                   # pointwise wasserstein distances
         results.append(np.mean(dists))                                  # average over neighborhoods and directions
-    return np.mean(results)
+    return np.mean(results,dtype=A.dtype)
 
 if __name__ == '__main__':
 
     # 指定路径
-    celeba_path = 'G:\CELEBA\img_align_celeba'
-    attr_txt_path = r"G:\CELEBA\list_attr_celeba.txt"
+    celeba_path = 'F:\ww\CELEBA\img_align_celeba'
+    attr_txt_path = r"F:\ww\CELEBA\list_attr_celeba.txt"
 
     # 获取数据集
-    batch = CSP.get_specfic_data(celeba_path, attr_txt_path, 16, 1)
-    batch = batch[0:8192]  # 2^13
+    batch = CSP.get_data(celeba_path, attr_txt_path, 9, 1,expect_total=8192).astype(np.float32)#2^13
     us.CV2_IMSHOW_NHWC_RAMDOM(batch,1,25,5,5,'batch',0)
 
     # 获取拉式金字塔

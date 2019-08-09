@@ -30,7 +30,41 @@ def build_attr_list(attr_txt_path):
     g.close()
 
 
-
+def get_data(celeba_path, attr_txt_path, attr_idx, flag=1,size=(128,128),expect_total=20000):
+    # 打开attr.txt
+    f = open(attr_txt_path)
+    # 数目和属性
+    img_total = f.readline()
+    attrs = f.readline()
+    # 提取目标数据
+    line = f.readline()
+    num = 0
+    data = []
+    while line:
+        array = line.split()
+        target = int(array[attr_idx])
+        # 提取目标图片
+        if target == flag:
+            filename = array[0]
+            filename = os.path.join(celeba_path, filename)
+            # 读取图片
+            img = cv2.imread(filename)
+            # 扣取人脸
+            img = utils.CV2_CROP_FACE(img)
+            if img is None:
+                line = f.readline()
+                continue
+            num += 1
+            print('捕捉第%d张图片:%s..' % (num, filename))
+            # resize
+            img = cv2.resize(img, size)
+            data.append(img)
+            # 读取完毕
+            if num == expect_total:
+                break
+        # 读取下一数据
+        line = f.readline()
+    return np.array(data)/255
 
 
 """
@@ -44,7 +78,6 @@ def get_specfic_data(celeba_path, attr_txt_path, attr_idx, flag=1, expect_total=
     img_total = f.readline()
     attrs = f.readline()
     # 提取目标数据
-
     # 指定属性
     line = f.readline()
     num = 0
