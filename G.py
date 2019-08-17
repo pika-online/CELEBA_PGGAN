@@ -3,9 +3,9 @@ import tensorflow as tf
 import utils
 
 import os
-# os.environ['CUDA_VISIBLE_DEVICES']='0'
+os.environ['CUDA_VISIBLE_DEVICES']='0'
 
-meta_path = r'./ckpt/PG_level7_False/network.ckpt-16000.meta'
+meta_path = r'./ckpt/PG10_level7_False/network.ckpt-18000.meta'
 
 # 加载模型
 meta_graph = tf.train.import_meta_graph(meta_path)
@@ -27,13 +27,13 @@ with tf.Session() as sess:
     init = [tf.initialize_all_variables(),tf.local_variables_initializer()]
     sess.run(init)
 
-    meta_graph.restore(sess,tf.train.latest_checkpoint(r'./ckpt/PG_level7_False'))
+    meta_graph.restore(sess,tf.train.latest_checkpoint(r'./ckpt/PG10_level7_False'))
 
-    # z = np.random.normal(size=(25, 512))
-    # G = (sess.run(fake_SS,feed_dict={latents:z})+1)/2
-    # utils.CV2_IMSHOW_NHWC_RAMDOM(G,1,25,5,5,'G')
-
-    Wass = np.array(utils.PICKLE_LOADING(r'./trainlog/Wass_64x64_trans_False'))
-    utils.PLT_PLOT(Wass[:,1])
+    z = np.random.normal(size=(25, 512))
+    G = (sess.run(fake_SS,feed_dict={latents:z})+1)/2
+    utils.CV2_IMSHOW_NHWC_RAMDOM(G,1,25,5,5,'G')
+    #
+    # Wass = np.array(utils.PICKLE_LOADING(r'./trainlog/Wass_64x64_trans_False'))
+    # utils.PLT_PLOT(Wass[:,1])
 
 

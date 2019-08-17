@@ -4,7 +4,6 @@ Author:Ephemeroptera
 date:2019-8-1
 mail:605686962@qq.com
 
-
 数据格式：nf = [num,fmaps] , nhwf = [num,height,width,fmaps] , nd = nf or nhwf = [num,data]
 """
 import tensorflow as tf
@@ -115,11 +114,11 @@ def MinibatchstateConcat(nhwf, averaging='all'):
     """
     adjusted_std = lambda x, **kwargs: tf.sqrt(tf.reduce_mean((x - tf.reduce_mean(x, **kwargs)) **2, **kwargs) + 1e-8)
     vals = adjusted_std(nhwf, axis=0, keep_dims=True)
-    if averaging == 'all':
-        vals = tf.reduce_mean(vals, keep_dims=True)
-    else:
-        print ("nothing")
+    # 求均值
+    vals = tf.reduce_mean(vals, keep_dims=True)
+    # 复制扩张
     vals = tf.tile(vals, multiples=(group_size, s[1].value, s[2].value, 1))
+    # 将统计特征拼接到每个样本特征图中
     return tf.concat([nhwf, vals], axis=3)
 
 

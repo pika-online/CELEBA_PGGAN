@@ -21,16 +21,30 @@ CELEBA的标签文件 list_attr_celeba.txt中:
 """
 def build_attr_list(attr_txt_path):
     f = open(attr_txt_path)
-    img_total = f.readline() # 数量行
-    attrs = f.readline() # 属性行
+    # 数量行
+    img_total = f.readline()
+    # 属性行
+    attrs = f.readline()
+    # 将属性行写入 attr_list.txt
     g = open(r"./attr_list.txt",'w')
     for idx,attr in enumerate(attrs.split()):
         g.writelines([attr,':  %d\n'%(idx+1)])
     f.close()
     g.close()
 
-
+"""
+从CelebA数据集中获取指定数目图片
+"""
 def get_data(celeba_path, attr_txt_path, attr_idx, flag=1,size=(128,128),expect_total=20000):
+    """
+    :param celeba_path: CelebA 路径
+    :param attr_txt_path: attr_txt路径
+    :param attr_idx: 指定的属性id
+    :param flag: 正例/反例
+    :param size: 图片大小
+    :param expect_total: 指定图片数量
+    :return:
+    """
     # 打开attr.txt
     f = open(attr_txt_path)
     # 数目和属性
@@ -51,6 +65,7 @@ def get_data(celeba_path, attr_txt_path, attr_idx, flag=1,size=(128,128),expect_
             img = cv2.imread(filename)
             # 扣取人脸
             img = utils.CV2_CROP_FACE(img)
+            # 检测失败则跳出
             if img is None:
                 line = f.readline()
                 continue
@@ -59,7 +74,7 @@ def get_data(celeba_path, attr_txt_path, attr_idx, flag=1,size=(128,128),expect_
             # resize
             img = cv2.resize(img, size)
             data.append(img)
-            # 读取完毕
+            # 读取完毕退出
             if num == expect_total:
                 break
         # 读取下一数据
@@ -68,17 +83,15 @@ def get_data(celeba_path, attr_txt_path, attr_idx, flag=1,size=(128,128),expect_
 
 
 """
-在attr_list.txt中我们可以轻松的选择我们想要的属性，并在标签文件list_attr_celeba.txt文件中获得该属性下全部图像的文件名。
-并读取图片且resize目标大小（flag=1表示属性为正例）_
+数据集转tfrecord格式存储，考虑到内存空间限制，这里采用分批存储
 """
 def get_specfic_data(celeba_path, attr_txt_path, attr_idx, flag=1, expect_total=20000, batchs=5, size=(128, 128), show=False):
     # 打开attr.txt
     f = open(attr_txt_path)
-    # 数目和属性
+    # 数目和属性行
     img_total = f.readline()
     attrs = f.readline()
-    # 提取目标数据
-    # 指定属性
+
     line = f.readline()
     num = 0
     data = []
@@ -89,14 +102,13 @@ def get_specfic_data(celeba_path, attr_txt_path, attr_idx, flag=1, expect_total=
     idxs = tfr.get_seg_index(expect_total,batchs)
 
     while line:
+        # 指定属性
         array = line.split()
         target = int(array[attr_idx])
-        # 提取目标图片
         if target == flag:
-
+            # 读取图片
             filename = array[0]
             filename = os.path.join(celeba_path, filename)
-            # 读取图片
             img = cv2.imread(filename)
             # 扣取人脸
             img = utils.CV2_CROP_FACE(img)
@@ -111,7 +123,7 @@ def get_specfic_data(celeba_path, attr_txt_path, attr_idx, flag=1, expect_total=
                 cv2.imshow('CELEBA',img)
                 cv2.waitKey(0)
             data.append(img)
-            # 设定期望数据量
+            # 分批保存
             if num % batch_size==0 and num>0:
                 # 多尺度缩放 和 保存 [128,64,32,16,8,4]
                 seg = [idxs[batch_n], idxs[batch_n + 1]]
@@ -121,7 +133,6 @@ def get_specfic_data(celeba_path, attr_txt_path, attr_idx, flag=1, expect_total=
                         lower = utils.downsampling_nhwc(lower)
                     else:
                         lower = np.array(data)/255
-
                     # 分辨率
                     res = lower.shape[1]
                     print('当前分辨率：%dx%d..' % (res, res))
@@ -133,6 +144,7 @@ def get_specfic_data(celeba_path, attr_txt_path, attr_idx, flag=1, expect_total=
                     savename = './TFR/celeba_%dx%d' % (res, res)
                     tfr.Saving_Batch_TFR(savename,idx,lower.astype(np.float32),label,batch_n,batchs-1)
                 batch_n += 1
+                # 释放内存
                 del lower
                 del data
                 data = []
